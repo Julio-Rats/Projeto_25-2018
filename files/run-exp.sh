@@ -2,8 +2,8 @@
 #                                                                        #
 # run-exp.sh                                                             #
 #                                                                        #
-# Executa o experimento do simulated annealing com o Simulador com 	 #
-# 		quantidade de repeticoes especificadas. 		 #
+# Executa o experimento do simulated annealing com o Simulador com 	     #
+# 		quantidade de repeticoes especificadas. 		 										   #
 #                                                                        #
 ##########################################################################
 

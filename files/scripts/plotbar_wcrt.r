@@ -1,3 +1,5 @@
+# Cria gráfico de barras crescente com os piores tempos de atrasos de cada mensagem
+
 argv <- commandArgs(trailingOnly = TRUE)
 
 png(paste(argv[1],"png",sep="."), width=980, height=480)
