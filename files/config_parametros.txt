@@ -4,25 +4,25 @@
 #                                                               #
 #################################################################
 #Numero de iterações ou vizinhos
-i 40
+i 50
 
 # Numero de reaquecimentos
 r 3
 
 # Temperatura inicial do SA
-s 1000.0
+s 8000.0
 
 # Temperatura final do SA
 f 10.0
 
 # Fator de resfriamento Alpha do SA
-a 0.92
+a 0.95
 
 # Numero de perturbacoes na busca local e#mvizinhanca do SA
 p 1
 
 #Vizinho inicial z = zero, a = aleatoria
-c z
+c a
 
 # Busca de vizinhança e pertubação
 b u i # uniforme incremetal
