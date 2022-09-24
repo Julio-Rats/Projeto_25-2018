@@ -14,10 +14,10 @@
 /*                                                                                       */
 /*****************************************************************************************/
 /* Numero de mensagens consideradas pelo arquivo de configuracao */
-u_int16_t   SaNumMsgCan    				 = 0L;
+u_int16_t   SaNumMsgCan			   = 0L;
 
 /* Array de parametros de mensagens */
-StSaMsgTmrSlot* pSaMsgParArray 		 = NULL;
+StSaMsgTmrSlot* pSaMsgParArray	   = NULL;
 
 /* Solucoes usadas durante o processamento do Simulated Annealing */
 StSaSolucao* pSaMelhor             = NULL;
@@ -51,7 +51,7 @@ double       TIME_CAN_SIMULATED    = 120000;
 bool         SA_VERBOSE            = FALSE;
 bool         SA_VERBOSE_FULL       = FALSE;
 bool         SA_ONLY_SIM           = FALSE;
-bool         SA_GRAVA_LOGSIM 	     = FALSE;
+bool         SA_GRAVA_LOGSIM 	   = FALSE;
 bool         SA_GRAVA_OBJ  	       = FALSE;
 bool         SA_GRAVA_WCRT 	       = FALSE;
 bool         SET_LIMIT_DELAY       = FALSE;
@@ -72,23 +72,24 @@ char SaArqLogSim[SA_MAX_CHAR_COMMAND_LINE];
 char SaSimFile[SA_MAX_CHAR_COMMAND_LINE];
 
 /*Descritores de arquvos, para os logs, modos verbose*/
-FILE*    	   Arq_OBJ                = NULL;
-FILE*    	   Arq_Best               = NULL;
-FILE*    	   Arq_WCRT               = NULL;
+FILE*	Arq_OBJ		= NULL;
+FILE*	Arq_Best	= NULL;
+FILE*	Arq_WCRT	= NULL;
 
 void start_can_simulated(char* path_arq, double time_simulation)
 {
-      char* long_path = (char*)malloc(sizeof(char)*128);
-      if(!long_path){
-          printf("\n================================================================================");
-      		printf("\n [ERRO] Erro malloc() variavel '%s' falha ao tentar alocar %d bytes, função start_can_simulated()", "long_path", sizeof(char)*128);
-      		printf("\n================================================================================\n");
-      		exit(SA_ERRO_MEMORIA);
-      }
-      strcpy(long_path,PATH_SA);
-      strcat(long_path, path_arq);
+	char* long_path = (char*)malloc(sizeof(char)*256);
+	if(!long_path)
+	{
+		printf("\n================================================================================");
+		printf("\n [ERRO] Erro malloc() variavel '%s' falha ao tentar alocar %d bytes, função start_can_simulated()", "long_path", sizeof(char)*256);
+		printf("\n================================================================================\n");
+		exit(SA_ERRO_MEMORIA);
+	}
+	strcpy(long_path,PATH_SA);
+	strcat(long_path, path_arq);
 
-      main_simulated(path_arq, time_simulation);
+	main_simulated(path_arq, time_simulation);
 }
 
 /*****************************************************************************************/
@@ -319,28 +320,65 @@ void SaAbreArquivoConfiguracao(char* Nome)
 
 				break;
 			}
-			//(Julio)
+			// (Julio)
 			/* Numero de iterações antes de um decaimento de temperatura (default == 1)*/
 			case 'i':
+			{
+				/* Pega o numero do iterador */
+				fscanf(pArq, "%u", &SaNumIteracao);
+
+				/* Ignora restante da linha */
+				do
 				{
-					/* Pega o numero do iterador */
-					fscanf(pArq, "%u", &SaNumIteracao);
-
-					/* Ignora restante da linha */
-					do
-					{
-						fscanf(pArq, "%c", &Lixo);
-					}
-					while(Lixo != '\n');
-
-					break;
+					fscanf(pArq, "%c", &Lixo);
 				}
+				while(Lixo != '\n');
+
+				break;
+			}
 			/*Pega numero de reaquecimentos (default == 0)*/
 			case 'r':
-				{
-					/* Pega o numero de reaquecimento */
-					fscanf(pArq, "%hhu", &SaNumReaquecimento);
+			{
+				/* Pega o numero de reaquecimento */
+				fscanf(pArq, "%hhu", &SaNumReaquecimento);
 
+				/* Ignora restante da linha */
+				do
+				{
+					fscanf(pArq, "%c", &Lixo);
+				}
+				while(Lixo != '\n');
+
+				break;
+			}
+			/*Metodo do vizinho inicial */
+			case 'c':
+			{
+				char solucao_start;
+				fscanf(pArq, "%c", &Lixo);
+				fscanf(pArq, "%c", &solucao_start);
+
+				switch (solucao_start) 
+				{
+					case 'a':
+					{
+						SaMetodoInicial = SA_CNF_START_RANDOM;
+						break;
+					}
+					case 'z':
+					{
+						SaMetodoInicial = SA_CNF_START_ZERO;
+						break;
+					}
+					default:
+					{
+						printf("\n================================================================================");
+						printf("\n [ERRO] Entrada para vizinho inicial desconhecida '%c' na linha %d do arquivo '%s'", solucao_start, Linha, Nome);
+						printf("\n================================================================================\n\n");
+						exit(SA_ERRO_PARSING_CONFIG);
+						break;
+					}
+				}
 					/* Ignora restante da linha */
 					do
 					{
@@ -349,110 +387,74 @@ void SaAbreArquivoConfiguracao(char* Nome)
 					while(Lixo != '\n');
 
 					break;
-				}
-				/*Metodo do vizinho inicial */
-				case 'c':
-				{
-						char solucao_start;
-						fscanf(pArq, "%c", &Lixo);
-						fscanf(pArq, "%c", &solucao_start);
-
-						switch (solucao_start) {
-								case 'a':
-								{
-										SaMetodoInicial = SA_CNF_START_RANDOM;
-										break;
-								}
-								case 'z':
-								{
-										SaMetodoInicial = SA_CNF_START_ZERO;
-										break;
-								}
-								default:
-								{
-									printf("\n================================================================================");
-									printf("\n [ERRO] Entrada para vizinho inicial desconhecida '%c' na linha %d do arquivo '%s'", solucao_start, Linha, Nome);
-									printf("\n================================================================================\n\n");
-									exit(SA_ERRO_PARSING_CONFIG);
-									break;
-								}
-						}
-						/* Ignora restante da linha */
-						do
-						{
-							fscanf(pArq, "%c", &Lixo);
-						}
-						while(Lixo != '\n');
-
-						break;
 				}
 				/*Metodo de busca vizinhanca*/
 				case 'b':
+				{
+					char busca;
+					char pertub;
+
+					fscanf(pArq, "%c", &Lixo);
+					fscanf(pArq, "%c", &busca);
+					fscanf(pArq, "%c", &Lixo);
+					fscanf(pArq, "%c", &pertub);
+
+					switch (busca)
 					{
-						char busca;
-						char pertub;
-
-						fscanf(pArq, "%c", &Lixo);
-						fscanf(pArq, "%c", &busca);
-						fscanf(pArq, "%c", &Lixo);
-						fscanf(pArq, "%c", &pertub);
-
-						switch (busca)
+						case 'u':
 						{
-							case 'u':
-							{
-								SaMetodoBusca = SA_CNF_SELECAO_UNIFORME;
-								break;
-							}
-							case 'i':
-							{
-								SaMetodoBusca = SA_CNF_SELECAO_PROPORCIONAL_ID;
-								break;
-							}
-							default:
-							{
-								printf("\n================================================================================");
-								printf("\n [ERRO] Entrada para busca de vizinhança desconhecida '%c' na linha %d do arquivo '%s'", busca, Linha, Nome);
-								printf("\n================================================================================\n\n");
-								exit(SA_ERRO_PARSING_CONFIG);
-								break;
-							}
+							SaMetodoBusca = SA_CNF_SELECAO_UNIFORME;
+							break;
 						}
-						switch (pertub)
+						case 'i':
 						{
-							case 'r':
-							{
-								SaMetodoPert = SA_CNF_PERT_RANDOM;
-								break;
-							}
-							case 'i':
-							{
-								SaMetodoPert = SA_CNF_PERT_INCRIMENT;
-								break;
-							}
-							case 'c':
-							{
-								SaMetodoPert = SA_CNF_PERT_RAND_DELAY;
-								break;
-							}
-							default:
-							{
-								printf("\n================================================================================");
-								printf("\n [ERRO] Entrada para pertubação de vizinhança desconhecida '%c' na linha %d do arquivo '%s'", pertub, Linha, Nome);
-								printf("\n================================================================================\n");
-								exit(SA_ERRO_PARSING_CONFIG);
-								break;
-							}
+							SaMetodoBusca = SA_CNF_SELECAO_PROPORCIONAL_ID;
+							break;
 						}
-						/* Ignora restante da linha */
-						do
+						default:
 						{
-							fscanf(pArq, "%c", &Lixo);
+							printf("\n================================================================================");
+							printf("\n [ERRO] Entrada para busca de vizinhança desconhecida '%c' na linha %d do arquivo '%s'", busca, Linha, Nome);
+							printf("\n================================================================================\n\n");
+							exit(SA_ERRO_PARSING_CONFIG);
+							break;
 						}
-						while(Lixo != '\n');
-
+				}
+				switch (pertub)
+				{
+					case 'r':
+					{
+						SaMetodoPert = SA_CNF_PERT_RANDOM;
 						break;
 					}
+					case 'i':
+					{
+						SaMetodoPert = SA_CNF_PERT_INCRIMENT;
+						break;
+					}
+					case 'c':
+					{
+						SaMetodoPert = SA_CNF_PERT_RAND_DELAY;
+						break;
+					}
+					default:
+					{
+						printf("\n================================================================================");
+						printf("\n [ERRO] Entrada para pertubação de vizinhança desconhecida '%c' na linha %d do arquivo '%s'", pertub, Linha, Nome);
+						printf("\n================================================================================\n");
+						exit(SA_ERRO_PARSING_CONFIG);
+						break;
+					}
+				}
+				/* Ignora restante da linha */
+				do
+				{
+					fscanf(pArq, "%c", &Lixo);
+				}
+				while(Lixo != '\n');
+
+				break;
+			}
 			//
 			/* Caso outro caracter seja lido, informar o erro */
 			default:
@@ -484,17 +486,15 @@ void print_wcrt(char* arch_name)
 
 		if (!(arch))
 		{
-				printf("\n================================================================================");
-				printf("\n [ERRO] Falha ao abrir o arquivo \"%s\"", arch_name);
-				printf("\n================================================================================\n\n");
-				exit(ERROR_IO);
+			printf("\n================================================================================");
+			printf("\n [ERRO] Falha ao abrir o arquivo \"%s\"", arch_name);
+			printf("\n================================================================================\n\n");
+			exit(ERROR_IO);
 		}
 
 		fprintf(arch, "ID\tWCRT\n");
 		for(fifo_t* aux=list_event->first; aux; aux=aux->next_event)
-		{
-				fprintf(arch, "%d\t%lf\n", aux->event.frame.id, aux->event.frame.wcrt);
-		}
+			fprintf(arch, "%d\t%lf\n", aux->event.frame.id, aux->event.frame.wcrt);
 		fclose(arch);
 }
 
@@ -510,10 +510,10 @@ void get_candb(char* arch_name)
 
 		if (!(arch))
 		{
-				printf("\n================================================================================");
-				printf("\n [ERRO] Falha ao abrir o arquivo \"%s\"", arch_name);
-				printf("\n================================================================================\n\n");
-				exit(ERROR_IO);
+			printf("\n================================================================================");
+			printf("\n [ERRO] Falha ao abrir o arquivo \"%s\"", arch_name);
+			printf("\n================================================================================\n\n");
+			exit(ERROR_IO);
 		}
 
 		event_t         evento;
@@ -527,36 +527,35 @@ void get_candb(char* arch_name)
 		rewind(arch);
 
 		while (fscanf(arch,"%lf\t%lf\t%lf\t%lf\t%u\n", &id, &cycle_time, &deadline_time,&delay_start_time, &payload) != EOF)
-		{
-					if (pSaMsgParArray)
-					{
-							pSaMsgParArray = (StSaMsgTmrSlot*)realloc(pSaMsgParArray,sizeof(StSaMsgTmrSlot)*(++SaNumMsgCan));
-							pSaMsgParArray[SaNumMsgCan-1].Id               = id;
-							pSaMsgParArray[SaNumMsgCan-1].TamCiclo         = (double)(cycle_time);
-							pSaMsgParArray[SaNumMsgCan-1].StartDelay       = (double)(delay_start_time);
-							pSaMsgParArray[SaNumMsgCan-1].deadline_time    = deadline_time;
-							pSaMsgParArray[SaNumMsgCan-1].payload          = payload;
-					}
-					else
-					{
-							pSaMsgParArray = (StSaMsgTmrSlot*)malloc(sizeof(StSaMsgTmrSlot)*(++SaNumMsgCan));
-							pSaMsgParArray[SaNumMsgCan-1].Id               = id;
-							pSaMsgParArray[SaNumMsgCan-1].TamCiclo         = (double)(cycle_time);
-							pSaMsgParArray[SaNumMsgCan-1].StartDelay       = (double)(delay_start_time);
-							pSaMsgParArray[SaNumMsgCan-1].deadline_time    = deadline_time;
-							pSaMsgParArray[SaNumMsgCan-1].payload          = payload;
-					}
-		}
+			if (pSaMsgParArray)
+			{
+					pSaMsgParArray = (StSaMsgTmrSlot*)realloc(pSaMsgParArray,sizeof(StSaMsgTmrSlot)*(++SaNumMsgCan));
+					pSaMsgParArray[SaNumMsgCan-1].Id               = id;
+					pSaMsgParArray[SaNumMsgCan-1].TamCiclo         = (double)(cycle_time);
+					pSaMsgParArray[SaNumMsgCan-1].StartDelay       = (double)(delay_start_time);
+					pSaMsgParArray[SaNumMsgCan-1].deadline_time    = deadline_time;
+					pSaMsgParArray[SaNumMsgCan-1].payload          = payload;
+			}
+			else
+			{
+					pSaMsgParArray = (StSaMsgTmrSlot*)malloc(sizeof(StSaMsgTmrSlot)*(++SaNumMsgCan));
+					pSaMsgParArray[SaNumMsgCan-1].Id               = id;
+					pSaMsgParArray[SaNumMsgCan-1].TamCiclo         = (double)(cycle_time);
+					pSaMsgParArray[SaNumMsgCan-1].StartDelay       = (double)(delay_start_time);
+					pSaMsgParArray[SaNumMsgCan-1].deadline_time    = deadline_time;
+					pSaMsgParArray[SaNumMsgCan-1].payload          = payload;
+			}
+		
 		/* Inicializa vetor de controle de posicoes sorteadas */
 		pSaBitPosicao = (unsigned char *) malloc(sizeof(unsigned char) * SaNumMsgCan);
 
 		/* Caso a alocacao nao tenha ocorrido com exito */
 		if(pSaBitPosicao == NULL)
 		{
-				printf("\n================================================================================");
-				printf("\n [ERRO] falha na alocacao de memoria em SaAbreArquivoConfiguracao()");
-				printf("\n================================================================================\n");
-				exit(SA_ERRO_MEMORIA);
+			printf("\n================================================================================");
+			printf("\n [ERRO] falha na alocacao de memoria em SaAbreArquivoConfiguracao()");
+			printf("\n================================================================================\n");
+			exit(SA_ERRO_MEMORIA);
 		}
 		fclose(arch);
 }
@@ -675,9 +674,9 @@ void SaClonaSolucao(StSaSolucao* pCopia, StSaSolucao* pBase)
 
 	/* Copia os parametros diretos */
 	pCopia->WCRT       = pBase->WCRT;
-	// pCopia->NumMsg     = pBase->NumMsg;
+	// pCopia->NumMsg  = pBase->NumMsg;
 	pCopia->burst_time = pBase->burst_time;
-	// pCopia->NumMsg     = pBase->NumMsg;
+	// pCopia->NumMsg  = pBase->NumMsg;
 	pCopia->burst_size = pBase->burst_size;
 
 	/* Copia os slots da solucao base para a solucao clonada */
@@ -702,9 +701,7 @@ void SaCriaSolucaoAleatoria(StSaSolucao* pSolucao)
 	u_int16_t  i;
 	/* Define aleatoriamente uma alocacao de TamCiclo = (Ciclo + Delay) */
 	for(i = 0; i < SaNumMsgCan; i++)
-	{
 		pSolucao->pSol[i].StartDelay = (double) (rand() % (int)(pSolucao->pSol[i].TamCiclo*PORC_START_DELAY));
-	}
 }
 
 /*****************************************************************************************/
@@ -755,9 +752,7 @@ u_int16_t SaSelecionaSlotProporcionalAoID(StSaSolucao* pSolucao)
 	{
 		/* Verifica se encontramos o slot */
 		if((PercSelecionada >= Acumulado) && (PercSelecionada < Acumulado + pSolucao->pSol[Posicao].ProbSelecao))
-		{
 			break;
-		}
 
 		/* Incrementa e acumula */
 		Acumulado = Acumulado + pSolucao->pSol[Posicao].ProbSelecao;
@@ -793,32 +788,30 @@ void SaPerturbaSolucaoVizinhancaUniforme(StSaSolucao* pSolucao)
 
 	/* Reseta o vetor de controle de posicoes sorteadas */
 	for(i = 0; i < SaNumMsgCan; i++)
-	{
 		pSaBitPosicao[i] = FALSE;
-	}
 	/* Realiza o numero de trocas propostas para as mensagens CANs na vizinhanca da solucao */
 	for(i = 1; i <= SaNumSlotsPerturbacao; i++)
 	{
 		/* Sorteia enquanto nao encontrar posicao diferente */
 		do
 		{
-				/* Sorteia qual posicao da solucao ofertada sofrera' troca de valores */
-			switch(SaMetodoBusca)
-				{
-						/* Mensagens sao selecionadas de maneira uniforme, com mesma probabilidade */
-						case SA_CNF_SELECAO_UNIFORME:
-						{
-							PosTroca = SaSelecionaSlotUniforme(pSolucao);
-							break;
-						}
+		/* Sorteia qual posicao da solucao ofertada sofrera' troca de valores */
+		switch(SaMetodoBusca)
+		{
+			/* Mensagens sao selecionadas de maneira uniforme, com mesma probabilidade */
+			case SA_CNF_SELECAO_UNIFORME:
+			{
+				PosTroca = SaSelecionaSlotUniforme(pSolucao);
+				break;
+			}
 
-						/* Mensagens sao selecionadas de maneira proporcional ao seu ID */
-						case SA_CNF_SELECAO_PROPORCIONAL_ID:
-						{
-							PosTroca = SaSelecionaSlotProporcionalAoID(pSolucao);
-							break;
-						}
-				}
+			/* Mensagens sao selecionadas de maneira proporcional ao seu ID */
+			case SA_CNF_SELECAO_PROPORCIONAL_ID:
+			{
+				PosTroca = SaSelecionaSlotProporcionalAoID(pSolucao);
+				break;
+			}
+		}
 		}while(pSaBitPosicao[PosTroca] != FALSE);
 
 		/* Seta o controle de sorteio */
@@ -874,42 +867,40 @@ void SaPerturbaSolucaoVizinhancaUniforme(StSaSolucao* pSolucao)
 		// }
 		// while(pSolucao->pSol[PosTroca].Ciclo == 0.0);
 		//(JUlIO)
-			#define MIN_RAND     -5
-			#define MAX_RAND      5
-			switch (SaMetodoPert)
+		#define MIN_RAND     -5
+		#define MAX_RAND      5
+		switch (SaMetodoPert)
+		{
+			case SA_CNF_PERT_INCRIMENT:
 			{
-				case SA_CNF_PERT_INCRIMENT:
-			   	{
-							pSolucao->pSol[PosTroca].StartDelay += (double) ((rand()%(MAX_RAND-MIN_RAND+1))+MIN_RAND);
-							if (pSolucao->pSol[PosTroca].StartDelay < 0){
-									pSolucao->pSol[PosTroca].StartDelay = 0;
-							}
-							if (pSolucao->pSol[PosTroca].StartDelay > pSolucao->pSol[PosTroca].TamCiclo*PORC_START_DELAY){
-									pSolucao->pSol[PosTroca].StartDelay = pSolucao->pSol[PosTroca].TamCiclo*PORC_START_DELAY;
-							}
-							break;
-					}
-				case SA_CNF_PERT_RANDOM:
-					{
-							pSolucao->pSol[PosTroca].StartDelay = (double) (rand() % ((u_int32_t)(pSolucao->pSol[PosTroca].TamCiclo*PORC_START_DELAY)));
-							break;
-					}
+				pSolucao->pSol[PosTroca].StartDelay += (double) ((rand()%(MAX_RAND-MIN_RAND+1))+MIN_RAND);
+				if (pSolucao->pSol[PosTroca].StartDelay < 0)
+					pSolucao->pSol[PosTroca].StartDelay = 0;
+				if (pSolucao->pSol[PosTroca].StartDelay > pSolucao->pSol[PosTroca].TamCiclo*PORC_START_DELAY)
+					pSolucao->pSol[PosTroca].StartDelay = pSolucao->pSol[PosTroca].TamCiclo*PORC_START_DELAY;
+				break;
 			}
+			case SA_CNF_PERT_RANDOM:
+			{
+				pSolucao->pSol[PosTroca].StartDelay = (double) (rand() % ((u_int32_t)(pSolucao->pSol[PosTroca].TamCiclo*PORC_START_DELAY)));
+				break;
+			}
+		}
 
-			/* CODIGO ABAIXO É A LIMITAÇÃO DO START DELAY */
-			if (SET_LIMIT_DELAY)
-					if ((pSolucao->pSol[PosTroca].StartDelay > 0)&&(pSolucao->pSol[PosTroca].StartDelay < LIMIT_DELAY))
-          {
-							double prob = ((double) rand() / RAND_MAX);
-							if (prob <= 0.5)
-                  if (LIMIT_DELAY < pSolucao->pSol[PosTroca].deadline_time)
-                      pSolucao->pSol[PosTroca].StartDelay = LIMIT_DELAY;
-                  else
-                      pSolucao->pSol[PosTroca].StartDelay = 0.0;
-							else
-									pSolucao->pSol[PosTroca].StartDelay = 0.0;
-					}
-	  }
+		/* CODIGO ABAIXO É A LIMITAÇÃO DO START DELAY */
+		if (SET_LIMIT_DELAY)
+			if ((pSolucao->pSol[PosTroca].StartDelay > 0)&&(pSolucao->pSol[PosTroca].StartDelay < LIMIT_DELAY))
+			{
+				double prob = ((double) rand() / RAND_MAX);
+				if (prob <= 0.5)
+					if (LIMIT_DELAY < pSolucao->pSol[PosTroca].deadline_time)
+						pSolucao->pSol[PosTroca].StartDelay = LIMIT_DELAY;
+					else
+						pSolucao->pSol[PosTroca].StartDelay = 0.0;
+					else
+						pSolucao->pSol[PosTroca].StartDelay = 0.0;
+			}
+	}
 }
 
 /*****************************************************************************************/
@@ -942,9 +933,7 @@ void SaGeraArquivoEntradaParaODBC(char* pSaida, StSaSolucao* pSolucao)
 
 	/* Para cada mensagem contida na solucao, informa os seus tempos */
 	for(i = 0; i < SaNumMsgCan; i++)
-	{
 		fprintf(pArq, "%u\t%lf\t%lf\t%lf\t%u\n", pSolucao->pSol[i].Id, pSolucao->pSol[i].TamCiclo, pSolucao->pSol[i].deadline_time,pSolucao->pSol[i].StartDelay, pSolucao->pSol[i].payload);
-	}
 
 	/* Fecha o arquivo informado */
 	fclose(pArq);
@@ -963,9 +952,9 @@ void SaEstimaBusloadViaSimulacao(StSaSolucao* pSolucao)
 	/* Pega WCRT e o max tempo de fila após executar no simulador */
 	start_can_simulated(SaArqTempos, TIME_CAN_SIMULATED);
 
-		pSolucao->WCRT       = wcrt;
-		pSolucao->burst_time = time_mean_queue;
-		pSolucao->burst_size = avg_length_queue;
+	pSolucao->WCRT       = wcrt;
+	pSolucao->burst_time = time_mean_queue;
+	pSolucao->burst_size = avg_length_queue;
 }
 
 /*****************************************************************************************/
@@ -980,7 +969,7 @@ void SaPrintResultado(StSaSolucao* pSolucao)
 
 	/* Obtem a data/hora atual */
 	time (&rawtime);
-  timeinfo = localtime(&rawtime);
+  	timeinfo = localtime(&rawtime);
 
 	/* Cria o cabecalho do arquivo de saida final */
 	printf("RESULTS @ %s\n", asctime(timeinfo));
@@ -992,10 +981,7 @@ void SaPrintResultado(StSaSolucao* pSolucao)
 
 	/* Para cada mensagem contida na solucao, informa os seus tempos */
 	for(u_int16_t i = 0; i< SaNumMsgCan; i++)
-	{
 		printf("%ld\t%lf\t%lf\t%lf\t%u\n", pSolucao->pSol[i].Id, pSolucao->pSol[i].TamCiclo, pSolucao->pSol[i].deadline_time,pSolucao->pSol[i].StartDelay, pSolucao->pSol[i].payload);
-	}
-
 }
 
 /*****************************************************************************************/
@@ -1010,7 +996,7 @@ void SaLogResultado(StSaSolucao* pSolucao, char* Nome)
 	time_t     rawtime;
  	struct tm* timeinfo;
 
-  pArq = fopen(Nome, "w+");
+  	pArq = fopen(Nome, "w+");
 
 	if(pArq == NULL)
 	{
@@ -1036,9 +1022,7 @@ void SaLogResultado(StSaSolucao* pSolucao, char* Nome)
 
 	/* Para cada mensagem contida na solucao, informa os seus tempos */
 	for(i = 0; i< SaNumMsgCan; i++)
-	{
 		fprintf(pArq, "%ld\t%lf\t%lf\t%lf\t%u\n", pSolucao->pSol[i].Id, pSolucao->pSol[i].TamCiclo, pSolucao->pSol[i].deadline_time,pSolucao->pSol[i].StartDelay, pSolucao->pSol[i].payload);
-	}
 
 	/* Fecha arquivo de saida */
 	fclose(pArq);
@@ -1052,15 +1036,15 @@ void SaLogResultado(StSaSolucao* pSolucao, char* Nome)
 
 double SaCalculaObjetiva(StSaSolucao* pSolucao)
 {
-		double objetiva;
+	double objetiva;
 
-		objetiva =  pSolucao->WCRT*ESCALAR_WCRT;
+ 	objetiva =  pSolucao->WCRT*ESCALAR_WCRT;
     objetiva += pSolucao->burst_time*ESCALAR_TQUEUE;
     objetiva += pSolucao->burst_size*ESCALAR_LQUEUE;
-		for(u_int16_t i = 0; i < SaNumMsgCan; i++)
-				objetiva += pSolucao->pSol[i].StartDelay*ESCALAR_DELAY;
+	for(u_int16_t i = 0; i < SaNumMsgCan; i++)
+		objetiva += pSolucao->pSol[i].StartDelay*ESCALAR_DELAY;
 
-		return objetiva;
+	return objetiva;
 }
 /*****************************************************************************************/
 /*                                                                                       */
@@ -1072,9 +1056,8 @@ void SaGravaSolucaoCurrent(StSaSolucao* pSolucao, u_int32_t iterador)
 {
 		double sum_delay = 0;
 
-		for (u_int16_t i = 0; i < SaNumMsgCan; i++){
-				sum_delay += pSolucao->pSol[i].StartDelay;
-		}
+		for (u_int16_t i = 0; i < SaNumMsgCan; i++)
+			sum_delay += pSolucao->pSol[i].StartDelay;
 
 		fprintf(Arq_OBJ, "%ld\t%lf\t%lf\t%lf\n", iterador, SaCalculaObjetiva(pSolucao), pSolucao->WCRT, sum_delay);
 }
@@ -1096,17 +1079,17 @@ void SaGravaSolucaoBest(StSaSolucao* solucao)
 
 	Arq_Best = fopen(path, "w");
 
-	if (!Arq_Best){
-			printf("\n================================================================================");
-			printf("\n [ERRO] falha na alocacao de memoria em SaGravaSolucaoBest()");
-			printf("\n================================================================================\n");
-			exit(SA_ERRO_MEMORIA);
+	if (!Arq_Best)
+	{
+		printf("\n================================================================================");
+		printf("\n [ERRO] falha na alocacao de memoria em SaGravaSolucaoBest()");
+		printf("\n================================================================================\n");
+		exit(SA_ERRO_MEMORIA);
 	}
 
 	fprintf(Arq_Best, "ID\tCYCLE\tOFFSET\tDURATION\n");
-	for (u_int16_t i=0; i < SaNumMsgCan; i++){
-			fprintf(Arq_Best, "%ld\t%lf\t%lf\t0.1277\n", solucao->pSol[i].Id, solucao->pSol[i].TamCiclo, solucao->pSol[i].StartDelay);
-	}
+	for (u_int16_t i=0; i < SaNumMsgCan; i++)
+		fprintf(Arq_Best, "%ld\t%lf\t%lf\t0.1277\n", solucao->pSol[i].Id, solucao->pSol[i].TamCiclo, solucao->pSol[i].StartDelay);
 
 	fclose(Arq_Best);
 }
@@ -1140,18 +1123,19 @@ void SaSimulatedAnnealing(void)
 
 	if (SA_GRAVA_LOGSIM)
 	{
-			sprintf(path_file_best, "%s-%ld.dat", SaArqLogSim, log_frame++);
-			Arq_Log_Best = fopen(path_file_best, "w");
-			if (!Arq_Log_Best){
-					printf("\n================================================================================");
-					printf("\n [ERRO] arquivo '%s' não pode ser criado em SaSimulatedAnnealing()", path_file_best);
-					printf("\n================================================================================\n");
-					exit(SA_ERRO_IO);
-			}
-			logframes    = TRUE;
-			SaEstimaBusloadViaSimulacao(pSaMelhor);
-			logframes    = FALSE;
-			fclose(Arq_Log_Best);
+		sprintf(path_file_best, "%s-%ld.dat", SaArqLogSim, log_frame++);
+		Arq_Log_Best = fopen(path_file_best, "w");
+		if (!Arq_Log_Best)
+		{
+			printf("\n================================================================================");
+			printf("\n [ERRO] arquivo '%s' não pode ser criado em SaSimulatedAnnealing()", path_file_best);
+			printf("\n================================================================================\n");
+			exit(SA_ERRO_IO);
+		}
+		logframes    = TRUE;
+		SaEstimaBusloadViaSimulacao(pSaMelhor);
+		logframes    = FALSE;
+		fclose(Arq_Log_Best);
 	}
 
 	/* Inicializa uma solucao com tempos aleatorios */
@@ -1197,105 +1181,105 @@ void SaSimulatedAnnealing(void)
 	/* Laco principal do Simulated Annealing */
 	do
 	{
-    if (SA_VERBOSE)
-    {
-        printf("\n================================================================================\n");
-        printf("\n [INFO] Temperature @ %.2lf Degrees, reheating %d of %d times\n\n", Temperatura, num_reaquecimento, SaNumReaquecimento);
-        printf("================================================================================\n");
-    }
-
+		if (SA_VERBOSE)
+		{
+			printf("\n================================================================================\n");
+			printf("\n [INFO] Temperature @ %.2lf Degrees, reheating %d of %d times\n\n", Temperatura, num_reaquecimento, SaNumReaquecimento);
+			printf("================================================================================\n");
+		}
 		for (int j = 1; j <= SaNumIteracao; j++)
 		{
-				/*iterador do SA*/
-				// iterador++;
-				/* Cria uma copia do vizinho a partir da melhor solucao corrente */
-				SaClonaSolucao(pSaVizinho, pSaCorrente);
-				/* Perturba a solucao vizinho, de forma a gerar nova temporizacao proposta */
-				SaPerturbaSolucaoVizinhancaUniforme(pSaVizinho);
-				/* Avalia o Busload da solucao usando simulacao */
-				SaEstimaBusloadViaSimulacao(pSaVizinho);
+			/*iterador do SA*/
+			// iterador++;
+			/* Cria uma copia do vizinho a partir da melhor solucao corrente */
+			SaClonaSolucao(pSaVizinho, pSaCorrente);
+			/* Perturba a solucao vizinho, de forma a gerar nova temporizacao proposta */
+			SaPerturbaSolucaoVizinhancaUniforme(pSaVizinho);
+			/* Avalia o Busload da solucao usando simulacao */
+			SaEstimaBusloadViaSimulacao(pSaVizinho);
+
+			if (SA_VERBOSE_FULL)
+			{
+				sprintf(SolNome, "\n [INFO] pSaVizinho # %d @ %lf", i, Temperatura);
+				SaDbgExibeSolucao(pSaVizinho, SolNome);
+			}
+
+			/* Embora seja uma solucao com busload pior, pode atualizar se passar no criterio */
+			/* de aceitacao de Boltzman */
+			Delta = (SaCalculaObjetiva(pSaVizinho)-SaCalculaObjetiva(pSaCorrente));
+
+			/* Caso o melhor dos vizinhos seja melhor do que a melhor solucao conhecida, atualiza */
+			if(Delta <= 0.0)
+			{
+				if (SA_VERBOSE_FULL)
+					printf(" [INFO] Encontrado melhor do que corrente: %lf contra %lf\n", SaCalculaObjetiva(pSaMelhorVizinho), SaCalculaObjetiva(pSaCorrente));
+
+				/* Atualiza a solucao corrente e a 'overall' */
+				SaClonaSolucao(pSaCorrente, pSaVizinho);
 
 				if (SA_VERBOSE_FULL)
+					SaDbgExibeSolucao(pSaMelhor, "pSaMelhor");
+
+
+				/* Verifica se o melhor vizinho é melhor do que a 'overall solution' */
+				if(SaCalculaObjetiva(pSaVizinho) < SaCalculaObjetiva(pSaMelhor))
 				{
-						sprintf(SolNome, "\n [INFO] pSaVizinho # %d @ %lf", i, Temperatura);
-						SaDbgExibeSolucao(pSaVizinho, SolNome);
-				}
-
-				/* Embora seja uma solucao com busload pior, pode atualizar se passar no criterio */
-				/* de aceitacao de Boltzman */
-				Delta = (SaCalculaObjetiva(pSaVizinho)-SaCalculaObjetiva(pSaCorrente));
-
-				/* Caso o melhor dos vizinhos seja melhor do que a melhor solucao conhecida, atualiza */
-				if(Delta <= 0.0)
-				{
-						if (SA_VERBOSE_FULL)
-							printf(" [INFO] Encontrado melhor do que corrente: %lf contra %lf\n", SaCalculaObjetiva(pSaMelhorVizinho), SaCalculaObjetiva(pSaCorrente));
-
-						/* Atualiza a solucao corrente e a 'overall' */
-						SaClonaSolucao(pSaCorrente, pSaVizinho);
-
-						if (SA_VERBOSE_FULL)
-							SaDbgExibeSolucao(pSaMelhor, "pSaMelhor");
-
-
-						/* Verifica se o melhor vizinho é melhor do que a 'overall solution' */
-						if(SaCalculaObjetiva(pSaVizinho) < SaCalculaObjetiva(pSaMelhor))
-						{
-								/* Atualiza a melhor de todas as solucoes */
-								SaClonaSolucao(pSaMelhor, pSaVizinho);
-
-								if (SA_VERBOSE_FULL)
-									printf("\n [INFO] Novo OVERALL encontrado: %lf\n", SaCalculaObjetiva(pSaMelhor));
-
-								if (SA_GRAVA_LOGSIM)
-								{
-										sprintf(path_file_best, "%s-%ld.dat", SaArqLogSim, log_frame++);
-										Arq_Log_Best = fopen(path_file_best, "w");
-										if (!Arq_Log_Best){
-												printf("\n================================================================================");
-												printf("\n [ERRO] arquivo '%s' não pode ser criado em SaSimulatedAnnealing()", path_file_best);
-												printf("\n================================================================================\n");
-												exit(SA_ERRO_IO);
-										}
-										logframes    = TRUE;
-										SaEstimaBusloadViaSimulacao(pSaMelhor);
-										logframes    = FALSE;
-										fclose(Arq_Log_Best);
-								}
-
-						}
-            if (SA_GRAVA_WCRT)
-            {
-                sprintf(path_file_wcrt, "%s-%ld.dat", SaWCRTFile, cont_wcrt++);
-                print_wcrt(path_file_wcrt);
-            }
-            if (SA_GRAVA_OBJ)
-            /*Grava em arquivo solução corrente*/
-            SaGravaSolucaoCurrent(pSaCorrente, iterador++);
-				}
-				else
-				{
-					/* Calcula a probabilidade de aceitacao */
-					Probabilidade = exp(-Delta/Temperatura);
-
-					/* Sorteia um numero aleatorio entre 0 e 1 */
-					Sorteio = ((double) rand() / RAND_MAX);
+					/* Atualiza a melhor de todas as solucoes */
+					SaClonaSolucao(pSaMelhor, pSaVizinho);
 
 					if (SA_VERBOSE_FULL)
-							printf("\n [INFO] Prob: %lf, Temp: %lf, Sorteio: %lf, Viz %lf, Cur %lf)\n", Probabilidade, Temperatura, Sorteio, pSaVizinho->WCRT, pSaCorrente->WCRT);
+						printf("\n [INFO] Novo OVERALL encontrado: %lf\n", SaCalculaObjetiva(pSaMelhor));
 
-
-					/* Se valor sorteado esta dentro do criterio, atualiza solucao corrente */
-					if(Sorteio <= Probabilidade)
+					if (SA_GRAVA_LOGSIM)
 					{
-						/* Atualiza apenas a solucao corrente, nao a 'overall' */
-						SaClonaSolucao(pSaCorrente, pSaVizinho);
-
-						if (SA_VERBOSE_FULL)
-							SaDbgExibeSolucao(pSaCorrente, "pSaCorrente (Passou Criterio Boltzman)");
-
+						sprintf(path_file_best, "%s-%ld.dat", SaArqLogSim, log_frame++);
+						Arq_Log_Best = fopen(path_file_best, "w");
+						if (!Arq_Log_Best)
+						{
+							printf("\n================================================================================");
+							printf("\n [ERRO] arquivo '%s' não pode ser criado em SaSimulatedAnnealing()", path_file_best);
+							printf("\n================================================================================\n");
+							exit(SA_ERRO_IO);
+						}
+						logframes    = TRUE;
+						SaEstimaBusloadViaSimulacao(pSaMelhor);
+						logframes    = FALSE;
+						fclose(Arq_Log_Best);
 					}
+
 				}
+				if (SA_GRAVA_WCRT)
+				{
+					sprintf(path_file_wcrt, "%s-%ld.dat", SaWCRTFile, cont_wcrt++);
+					print_wcrt(path_file_wcrt);
+				}
+				if (SA_GRAVA_OBJ)
+				/*Grava em arquivo solução corrente*/
+				SaGravaSolucaoCurrent(pSaCorrente, iterador++);
+			}
+			else
+			{
+				/* Calcula a probabilidade de aceitacao */
+				Probabilidade = exp(-Delta/Temperatura);
+
+				/* Sorteia um numero aleatorio entre 0 e 1 */
+				Sorteio = ((double) rand() / RAND_MAX);
+
+				if (SA_VERBOSE_FULL)
+					printf("\n [INFO] Prob: %lf, Temp: %lf, Sorteio: %lf, Viz %lf, Cur %lf)\n", Probabilidade, Temperatura, Sorteio, pSaVizinho->WCRT, pSaCorrente->WCRT);
+
+
+				/* Se valor sorteado esta dentro do criterio, atualiza solucao corrente */
+				if(Sorteio <= Probabilidade)
+				{
+					/* Atualiza apenas a solucao corrente, nao a 'overall' */
+					SaClonaSolucao(pSaCorrente, pSaVizinho);
+
+					if (SA_VERBOSE_FULL)
+						SaDbgExibeSolucao(pSaCorrente, "pSaCorrente (Passou Criterio Boltzman)");
+
+				}
+			}
 		}
 		/* Decai a temperatura de acordo com o valor de Alpha */
 		Temperatura = Temperatura*SaAlpha;
@@ -1303,14 +1287,14 @@ void SaSimulatedAnnealing(void)
 		/*Verifica se temperatura chegou no limite para ajusta o numero de reaquecimento*/
 		if (Temperatura <= SaTempFinal)
 		{
-			 Temperatura = SaTempInicial;
-			 num_reaquecimento++;
-			 if (num_reaquecimento <= SaNumReaquecimento)
-			 {
-					 printf("\n\n================================================================================");
-			 	 	 printf("\n [INFO] Number of reheating %d times\n", num_reaquecimento);
-			 		 printf("================================================================================\n\n");
-		 	 }
+			Temperatura = SaTempInicial;
+			num_reaquecimento++;
+			if (num_reaquecimento <= SaNumReaquecimento)
+			{
+				printf("\n\n================================================================================");
+				printf("\n [INFO] Number of reheating %d times\n", num_reaquecimento);
+				printf("================================================================================\n\n");
+			}
 		}
 
 	}while((Temperatura > SaTempFinal)&&(num_reaquecimento <= SaNumReaquecimento));
@@ -1319,10 +1303,10 @@ void SaSimulatedAnnealing(void)
 	SaGeraArquivoEntradaParaODBC(SaArqTempos, pSaMelhor);
 
 	/* Efetua o log da melhor solucao encontrada ou printa na tela */
-  if (SA_RESULT)
-    SaPrintResultado(pSaMelhor);
-  else
-    SaLogResultado(pSaMelhor, SaArqSaida);
+	if (SA_RESULT)
+		SaPrintResultado(pSaMelhor);
+	else
+		SaLogResultado(pSaMelhor, SaArqSaida);
 
 	/* Libera memoria das solucoes usadas */
 	SaDesalocaSolucao(pSaCorrente);

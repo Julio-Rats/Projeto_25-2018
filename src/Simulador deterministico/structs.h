@@ -16,11 +16,11 @@
 
 
 /*
-    frame_t struct definindo um quadro CAN2.0A.
-    atributos:
-     id         = Ident. do quadro CAN <0..2047>.
-     cycle_time = tempo de uma nova 'msg' ser escrita no barramento <'-1' para msg não ciclicas>.
-     payload    = Numero natural que define quantos Bytes o quadro possui <1..8>.
+  frame_t struct definindo um quadro CAN2.0A.
+  atributos:
+    id         = Ident. do quadro CAN <0..2047>.
+    cycle_time = tempo de uma nova 'msg' ser escrita no barramento <'-1' para msg não ciclicas>.
+    payload    = Numero natural que define quantos Bytes o quadro possui <1..8>.
 
 */
 
@@ -47,7 +47,8 @@ typedef struct
 
 */
 
-typedef struct{
+typedef struct
+{
 
   frame_t frame;
   double  duration;

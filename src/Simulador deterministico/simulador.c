@@ -7,7 +7,6 @@ bool  PRINT_FRAMES = FALSE;
 
 int main_simulated(char* path, double time_simulation)
 {
-
     input_file(path);
     start_simulation(time_simulation);
 
@@ -28,7 +27,7 @@ void start_simulation(double time_end_simulation)
     acumul_length_queue         = 0L;
     acumul_length_queue_square  = 0L;
     msg_deadline                = 0;
-    fifo_t* prioritary_frame     = NULL;
+    fifo_t* prioritary_frame    = NULL;
     time_current_simulation     = list_event->first->event.time_happen;
     length_queue                = false;
     last_queue                  = false;
@@ -40,39 +39,39 @@ void start_simulation(double time_end_simulation)
 
     while(time_current_simulation <= time_end_simulation)
     {
-          frames_write++;
+        frames_write++;
 
-          prioritary_frame = get_priority_frame();
-          time_current_simulation = prioritary_frame->event.time_happen + prioritary_frame->event.duration;
-          if (time_current_simulation > time_end_simulation)
-              break;
-          if (DEBUG)
-          {
-              system("clear");
-              for(fifo_t* prioritary_frame=list_event->first;prioritary_frame;prioritary_frame=prioritary_frame->next_event)
-              {
-                    printf("ID = %lu\t", prioritary_frame->event.frame.id);
-                    printf("cycle = %lf\t", prioritary_frame->event.frame.cycle_time);
-                    printf("Current_time = %lf\t", prioritary_frame->event.time_current);
-                    printf("Happen_time = %lf\t", prioritary_frame->event.time_happen);
-                    printf("WCRT = %lf\n",  prioritary_frame->event.frame.wcrt);
-              }
-              printf("\nWRITE ID %d\tStart Time ", prioritary_frame->event.frame.id);
-              printf("%lf\n\n", time_current_simulation);
-              printf("tamanho da fila \t%lf\n", acumul_length_queue);
-              printf("tamanho max fila\t%d\n", max_length_queue);
-              printf("tempo max da fila\t%lf\n", time_max_queue);
-              getchar();
-          }
+        prioritary_frame = get_priority_frame();
+        time_current_simulation = prioritary_frame->event.time_happen + prioritary_frame->event.duration;
+        if (time_current_simulation > time_end_simulation)
+            break;
+        if (DEBUG)
+        {
+            system("clear");
+            for(fifo_t* prioritary_frame=list_event->first;prioritary_frame;prioritary_frame=prioritary_frame->next_event)
+            {
+                printf("ID = %lu\t", prioritary_frame->event.frame.id);
+                printf("cycle = %lf\t", prioritary_frame->event.frame.cycle_time);
+                printf("Current_time = %lf\t", prioritary_frame->event.time_current);
+                printf("Happen_time = %lf\t", prioritary_frame->event.time_happen);
+                printf("WCRT = %lf\n",  prioritary_frame->event.frame.wcrt);
+            }
+            printf("\nWRITE ID %d\tStart Time ", prioritary_frame->event.frame.id);
+            printf("%lf\n\n", time_current_simulation);
+            printf("tamanho da fila \t%lf\n", acumul_length_queue);
+            printf("tamanho max fila\t%d\n", max_length_queue);
+            printf("tempo max da fila\t%lf\n", time_max_queue);
+            getchar();
+        }
 
-          if (logframes)
-              gravaLogFrames(prioritary_frame->event);
+        if (logframes)
+            gravaLogFrames(prioritary_frame->event);
 
-          add_time_lost_arbitrage();
-          realloc_event(prioritary_frame);
-          verific_queue();
-          verific_deadlines();
-          verific_wcrt();
+        add_time_lost_arbitrage();
+        realloc_event(prioritary_frame);
+        verific_queue();
+        verific_deadlines();
+        verific_wcrt();
     } // while principal
 
     if (PRINT_FRAMES)
@@ -96,18 +95,17 @@ void start_simulation(double time_end_simulation)
 
     if (number_of_queue == 0)
     {
-         time_mean_queue   = 0;
-         mean_length_queue = 0;
-         min_length_queue  = 0;
-         time_min_queue    = 0;
+        time_mean_queue   = 0;
+        mean_length_queue = 0;
+        min_length_queue  = 0;
+        time_min_queue    = 0;
     }
     else
     {
-         mean_length_queue = ((double)acumul_length_queue/(double)number_of_queue);
-         time_mean_queue   = ((double)acumul_time_queue/(double)number_of_queue);
-         desvio            = (double)(acumul_length_queue_square/(double)number_of_queue)-(mean_length_queue*mean_length_queue);
-
-         avg_length_queue = mean_length_queue + (K*desvio);
+        mean_length_queue = ((double)acumul_length_queue/(double)number_of_queue);
+        time_mean_queue   = ((double)acumul_time_queue/(double)number_of_queue);
+        desvio            = (double)(acumul_length_queue_square/(double)number_of_queue)-(mean_length_queue*mean_length_queue);
+        avg_length_queue  = mean_length_queue + (K*desvio);
     }
 
     if (RESULTS)
@@ -147,41 +145,40 @@ void start_simulation(double time_end_simulation)
 
 void gravaLogFramesCab()
 {
-    if (!Arq_Log_Best){
+    if (!Arq_Log_Best)
+    {
         printf("\n================================================================================");
         printf("\n [ERRO] Arquivo '%s' falhou em abrir, função gravaLogFramesCab()", "LogFrames");
         printf("\n================================================================================\n");
         exit(ERROR_IO);
     }
     fprintf(Arq_Log_Best, "ID\tCYCLE\tTIMEREAL\tTIMESTAMP\tDURATION\tDELAY\n");
-
 }
 
 void gravaLogFrames(event_t event)
 {
-    fprintf(Arq_Log_Best, "%ld\t%lf\t%lf\t%lf\t%lf\t%lf\n", event.frame.id, event.frame.cycle_time, event.time_current
-                                                    , event.time_happen, event.duration, event.time_happen-event.time_current);
+    fprintf(Arq_Log_Best, "%ld\t%lf\t%lf\t%lf\t%lf\t%lf\n", event.frame.id, \
+     event.frame.cycle_time, event.time_current, event.time_happen, event.duration, event.time_happen-event.time_current);
 }
 
 fifo_t* get_priority_frame()
 {
-
     fifo_t*    event_priority = list_event->first;
 
     for(fifo_t* aux=list_event->first->next_event; aux; aux=aux->next_event)
     {
-        if (aux->event.time_happen > event_priority->event.time_happen)
-            break; // supondo que o vetor esteja sempre ordenado.
-         if (aux->event.frame.id < event_priority->event.frame.id)
-            event_priority = aux;
+    if (aux->event.time_happen > event_priority->event.time_happen)
+        break; // supondo que o vetor esteja sempre ordenado.
 
+    if (aux->event.frame.id < event_priority->event.frame.id)
+        event_priority = aux;
     }
+
     return event_priority;
 }
 
 void add_time_lost_arbitrage()
 {
-
     for(fifo_t* aux=list_event->first; aux; aux=aux->next_event)
         if (aux->event.time_happen < time_current_simulation)
             aux->event.time_happen = time_current_simulation;
@@ -191,7 +188,6 @@ void add_time_lost_arbitrage()
 
 void realloc_event(fifo_t* event)
 {
-
     if (event->event.frame.cycle_time < 0)
     {
         rem_list(event);
@@ -254,16 +250,15 @@ void verific_deadlines()
 {
 
     for(fifo_t* aux=list_event->first; aux; aux=aux->next_event)
-       if (aux->event.time_happen >= (aux->event.frame.cycle_time+aux->event.time_current))
-       {
-          msg_deadline++;
-          realloc_event(aux);
-       }
+        if (aux->event.time_happen >= (aux->event.frame.cycle_time+aux->event.time_current))
+        {
+            msg_deadline++;
+            realloc_event(aux);
+        }
 }
 
 void verific_wcrt()
 {
-
     for(fifo_t* aux=list_event->first; aux; aux=aux->next_event)
     {
         if (aux->event.frame.wcrt < (aux->event.time_happen - aux->event.time_current))
@@ -281,7 +276,7 @@ void get_wcrt()
 {
     wcrt = 0;
     for(fifo_t* aux=list_event->first; aux; aux=aux->next_event)
-          wcrt += aux->event.frame.wcrt;
+        wcrt += aux->event.frame.wcrt;
 }
 
 double get_mean_wcrt()
@@ -296,7 +291,6 @@ double get_mean_wcrt()
 
 void free_recurses()
 {
-
     for(fifo_t* aux=list_event->first; aux; aux=aux->next_event)
        if (aux->prev_event)
           rem_list(aux->prev_event);

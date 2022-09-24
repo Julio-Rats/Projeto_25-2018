@@ -4,8 +4,8 @@
 #include "structs.h"
 #include <stdio.h>
 /*
-   fifo_t struct Lista encadeada, contendo os evento ordenados no tempo de execução.
-   atributos:
+  fifo_t struct Lista encadeada, contendo os evento ordenados no tempo de execução.
+  atributos:
     event      = evento com frame e tempos para simular.
     next_event = ponteiro para proximo da lista.
     prev_event = ponteiro para anterior da lista.
@@ -13,7 +13,8 @@
 */
 
 typedef struct fifo_t fifo_t;
-struct fifo_t{
+struct fifo_t
+{
 
   event_t  event;
   fifo_t*   next_event;
@@ -21,10 +22,9 @@ struct fifo_t{
 
 };
 
-typedef struct{
-
+typedef struct
+{
   fifo_t* first;
-
 }head_t;
 
 head_t* list_event; // list_event = ponteiro da lista de eventos.
