@@ -11,12 +11,8 @@ onde ambos se comunicam por variáveis globais.
 
 Arquitetura dos diretórios
 
-./
-  |
-  |--bin: diretório com o código compilado, destino de makefile para
-  |        gerar o executável
-  |
-  |--files: diretório onde localiza o makefile, CANdbs e
-  |         pastas para resultado da ferramenta.
-  |
-  |--src: diretório com o código fonte do otimizador, simulador e a interface (CLI)
+- bin: diretório com o código compilado, destino de makefile para gerar o executável
+
+- files: diretório onde localiza o makefile, CANdbs e pastas para resultado da ferramenta.
+
+- src: diretório com o código fonte do otimizador, simulador e a interface (CLI)
